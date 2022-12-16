@@ -12,10 +12,10 @@ variables:
   azureSubscription: 'c1d91096-25a8-47a9-b40e-ac36194dbe05'
 
   # Web app name
-  webAppName: ''
+  webAppName: 'anonymous-feedback-app'
 
   # Environment name
-  environmentName: ''
+  environmentName: 'Node.js Express'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
