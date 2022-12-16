@@ -15,7 +15,7 @@ variables:
   webAppName: 'anonymous-feedback-app'
 
   # Environment name
-  environmentName: 'Node.js Express'
+  environmentName: 'Node'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
