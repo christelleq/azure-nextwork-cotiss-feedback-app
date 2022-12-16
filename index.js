@@ -1,66 +1,56 @@
-// Use express
-import express, { json, urlencoded } from 'express'
-const app = express()
-app.use(json())
-app.use(urlencoded({ extended: true }))
+import * as dotenv from 'dotenv' // Get environment variables from .env
+import { CosmosClient } from '@azure/cosmos' // Get Cosmos Client
+import express from 'express'
 import path from 'path'
-const __dirname = path.resolve()
 
-// Read .env file and set environment variables
-// require('dotenv').config()
-const random = Math.floor(Math.random() * 100)
+dotenv.config()
 
-// Use official mongodb driver to connect to the server
-import { MongoClient, ObjectId } from 'mongodb'
+const key = process.env.COSMOS_KEY // Provide required connection from environment variables
+const endpoint = process.env.COSMOS_ENDPOINT // Endpoint format: https://YOUR-RESOURCE-NAME.documents.azure.com:443/
+const databaseName = `anonymous-feedback-app-database`
+const containerName = `feedback`
+const partitionKeyPath = ['/feedbackPartition']
+const cosmosClient = new CosmosClient({ endpoint, key }) // Authenticate to Azure Cosmos DB
 
-// New instance of MongoClient with connection string
-// for Cosmos DB
-const url = process.env.REACT_APP_COSMOS_CONNECTION_STRING
-const client = new MongoClient(url)
-
-// Database reference with creation if it does not already exist
-const db = client.db(`anonymous-feedback-app-db`)
-console.log(`Database:\t${db.databaseName}\n`)
-
-// Collection reference with creation if it does not already exist
-const collection = db.collection('feedback')
-console.log(`Collection:\t${collection.collectionName}\n`)
-
-app.get('/', function (req, res) {
-  res.sendFile('index.html', { root: path.join(__dirname) })
+// Create database if it doesn't exist
+const { database } = await cosmosClient.databases.createIfNotExists({
+  id: databaseName,
 })
+console.log(`${database.id} database ready`)
 
-app.post('/', async function (req, res) {
-  console.log('post', req.body.feedback)
-  const newFeedback = {
-    date: new Date(),
-    feedback: req.body.feedback,
+// Create container if it doesn't exist
+const { container } = await database.containers.createIfNotExists({
+  id: containerName,
+  partitionKey: {
+    paths: partitionKeyPath,
+  },
+})
+console.log(`${container.id} container ready`)
+
+async function addFeedback(req, res, next) {
+  const feedback = req.body.feedback
+  const date = new Date()
+  const item = {
+    feedback: feedback,
+    date: date,
   }
-  console.log(new Date())
-  await client.connect()
-  const newfb = await collection.insertOne(newFeedback)
-  console.log(JSON.stringify(newfb))
-})
-
-async function main() {
-  // The remaining operations are added here
-  // in the main function
-
-  // Use connect method to connect to the server
-  await client.connect()
-
-  // Point read doc from collection:
-  // - without sharding, should use {_id}
-  // - with sharding,    should use {_id, partitionKey }, ex: {_id, category}
-  const feedbackPiece = await collection.findOne({
-    _id: ObjectId('6396d6a0f4945cb5ac7438e8'),
-  })
-  console.log(`feedbackPiece: ${JSON.stringify(feedbackPiece)}\n`)
+  const { resource } = await container.items.create(item)
+  console.log(`'${resource.feedback}' inserted`)
+  // Read item by id and partitionKey - least expensive `find`
+  await container.item(item.id, item.categoryName).read()
+  console.log(`${resource.feedback} read`)
 }
 
-main()
-  .then(console.log('main'))
-  .catch(console.error)
-  .finally(() => client.close())
+const app = express()
+const __dirname = path.resolve()
 
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(express.static(path.join(__dirname, 'index.html')))
 app.listen(3000)
+
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')))
+app.post('/addfeedback', (req, res, next) => {
+  addFeedback(req, res).catch(next)
+  res.redirect('/')
+})
