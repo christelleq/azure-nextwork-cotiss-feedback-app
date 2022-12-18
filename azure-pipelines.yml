@@ -27,7 +27,7 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      vmImage: $(vmImageName)
+      vmImage: MyPool
 
     steps:
     - task: NodeTool@0
@@ -82,7 +82,7 @@ stages:
     displayName: Deploy
     environment: $(environmentName)
     pool:
-      vmImage: $(vmImageName)
+      vmImage: MyPool
     strategy:
       runOnce:
         deploy:
