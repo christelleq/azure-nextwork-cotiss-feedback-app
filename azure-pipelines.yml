@@ -82,7 +82,7 @@ stages:
     displayName: Deploy
     environment: $(environmentName)
     pool:
-      vmImage: MyPool
+      vmImage: $(vmImageName)
     strategy:
       runOnce:
         deploy:
