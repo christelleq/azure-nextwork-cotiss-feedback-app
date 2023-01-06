@@ -44,5 +44,4 @@ stages:
     displayName: Web deploy
     environment:
       name: Node
-      resourceType: VirtualMachine
     
