@@ -8,12 +8,12 @@
     <!-- <link rel="stylesheet" href="style.css"> -->
   </head>
   <body>
-    <script type="module" src="index.js"></script>
     <h1 style="text-align: center;">Cotiss Feedback</h1>
     <form method="post" action="/addFeedback" style="display: flex; flex-direction: column; gap: 10px; align-items: center">
       <label for="feedback">Feedback Form</label>
-      <textarea id="feedback" name="feedback" style="height: 200px; width: 500px;"></textarea>
-      <button type="submit" style="background-color: green; width: fit-content; color: white">Submit Feedback</button>
+      <input type="text" id="feedback" name="feedback" style="height: 200px; width: 500px;"></input>
+      <button type="submit" style="background-color: blue; width: fit-content; color: white">Submit Feedback</button>
+      <div id="output"></div>
     </form>
   </body>
 </html> 
